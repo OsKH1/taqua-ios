@@ -1,0 +1,42 @@
+name: Build iOS IPA
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install CocoaPods
+        run: sudo gem install cocoapods
+
+      - name: Install Pods
+        run: pod install
+
+      - name: Build Archive
+        run: |
+          xcodebuild \
+          -workspace taqua_app.xcworkspace \
+          -scheme taqua_app \
+          -sdk iphoneos \
+          -configuration Release \
+          archive \
+          -archivePath build/taqua_app.xcarchive
+
+      - name: Export IPA
+        run: |
+          mkdir -p build/ipa
+          xcodebuild -exportArchive \
+          -archivePath build/taqua_app.xcarchive \
+          -exportPath build/ipa \
+          -exportOptionsPlist ExportOptions.plist
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v3
+        with:
+          name: taqua-ipa
+          path: build/ipa
