@@ -17,23 +17,27 @@ jobs:
       - name: Install Pods
         run: pod install
 
-      - name: Build Archive
+      - name: Build Archive (no signing)
         run: |
           xcodebuild \
           -workspace taqua_app.xcworkspace \
           -scheme taqua_app \
           -sdk iphoneos \
           -configuration Release \
+          -destination generic/platform=iOS \
+          CODE_SIGNING_ALLOWED=NO \
           archive \
           -archivePath build/taqua_app.xcarchive
 
-      - name: Export IPA
+      - name: Create IPA folder
+        run: mkdir -p build/ipa
+
+      - name: Zip app manually
         run: |
-          mkdir -p build/ipa
-          xcodebuild -exportArchive \
-          -archivePath build/taqua_app.xcarchive \
-          -exportPath build/ipa \
-          -exportOptionsPlist ExportOptions.plist
+          cd build
+          mkdir Payload
+          cp -r taqua_app.xcarchive/Products/Applications/*.app Payload/
+          zip -r ipa/taqua_app.ipa Payload
 
       - name: Upload IPA
         uses: actions/upload-artifact@v4
